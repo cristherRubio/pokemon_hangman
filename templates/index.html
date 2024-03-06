@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Home
+{% endblock %}
+
+{% block main %}
+    <h1>Poké-Hangman</h1>
+    <h3>Catch 'em all!</h3>
+    <a href="/game">
+        <button class="btn btn-primary" name="button" type="button" style="width: 300px; height: 200px;">Play</button>
+    </a>
+    <p>NOTE: You need to <a href="/register">register</a> to save your progress!</p>
+{% endblock %}
