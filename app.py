@@ -1,5 +1,6 @@
 import helpers
-
+import re
+import random
 from flask import Flask, render_template, request, redirect, url_for, session, flash, get_flashed_messages
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -7,20 +8,40 @@ from werkzeug.security import generate_password_hash, check_password_hash
 def create_app():
     app = Flask(__name__)
     app.secret_key = 'your_secret_key'  # Change this to a random value
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pokehang.db'
     db.init_app(app)  # Initialize SQLAlchemy within the application context
     with app.app_context():
         db.create_all()  # Create the database tables
+        populate_pokemon()
     return app
 
 # Define the User model
 db = SQLAlchemy()
 
-# Define the User model
+# Models for DB
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
+
+class Pokemon(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+
+class UserPokemon(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    pokemon_id = db.Column(db.Integer, db.ForeignKey('pokemon.id'), primary_key=True)
+
+# Populate Pokemon model
+def populate_pokemon():
+    with open('pokemons.txt', mode='r') as f:
+        data = f.readlines()
+
+    for pok in list(set(data)):
+        pok = pok.strip()
+        new_pok = Pokemon(name=pok)
+        db.session.add(new_pok)
+    db.session.commit()
 
 app = create_app()
 
@@ -34,6 +55,11 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+
+        # Password validation
+        if not re.match(r'^(?=.*[A-Za-z]{4})(?=.*\d)[A-Za-z\d]{5,}$', password):
+            flash('Password must contain at least 4 letters and 1 number.', 'danger')
+            return redirect(url_for('register'))
 
         existing_user = User.query.filter_by(username=username).first()
         print(existing_user)
@@ -65,7 +91,7 @@ def login():
             flash('You have successfully logged in!', 'success')
             return redirect(url_for('profile'))
         else:
-            flash('Invalid username or password. Please try again.', 'error')
+            flash('Invalid username or password. Please try again.', 'danger')
 
     return render_template('login.html')
 
@@ -87,7 +113,10 @@ def profile():
 
 @app.route('/game')
 def game():
-    return render_template('game.html')
+    all_pokemon = Pokemon.query.all()
+    rnd_pokemon = random.choice(all_pokemon)
+    print(rnd_pokemon.name)
+    return render_template('game.html', rnd_pokemon=rnd_pokemon)
 
 if __name__ == '__main__':
     app.run(debug=True)
