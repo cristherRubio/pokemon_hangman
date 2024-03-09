@@ -1,6 +1,8 @@
 body {
     font-family: "ＭＳ Ｐゴシック";
     font-weight: bold;
+    font-smooth: never;
+    -webkit-font-smoothing: none;
 }
 
 .btn-primary:hover {

@@ -5,43 +5,19 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from models import db
+from models import User, Pokemon, UserPokemon
+
 def create_app():
     app = Flask(__name__)
     app.secret_key = 'your_secret_key'  # Change this to a random value
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pokehang.db'
-    db.init_app(app)  # Initialize SQLAlchemy within the application context
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
     with app.app_context():
-        db.create_all()  # Create the database tables
-        populate_pokemon()
+        db.create_all()
     return app
 
-# Define the User model
-db = SQLAlchemy()
-
-# Models for DB
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
-
-class Pokemon(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-
-class UserPokemon(db.Model):
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    pokemon_id = db.Column(db.Integer, db.ForeignKey('pokemon.id'), primary_key=True)
-
-# Populate Pokemon model
-def populate_pokemon():
-    with open('pokemons.txt', mode='r') as f:
-        data = f.readlines()
-
-    for pok in list(set(data)):
-        pok = pok.strip()
-        new_pok = Pokemon(name=pok)
-        db.session.add(new_pok)
-    db.session.commit()
 
 app = create_app()
 
@@ -114,9 +90,9 @@ def profile():
 @app.route('/game')
 def game():
     all_pokemon = Pokemon.query.all()
-    rnd_pokemon = random.choice(all_pokemon)
-    print(rnd_pokemon.name)
-    return render_template('game.html', rnd_pokemon=rnd_pokemon)
+    rndm_pokemon = random.choice(all_pokemon)
+    print(rndm_pokemon.sprite_url)
+    return render_template('game.html', rndm_pokemon=rndm_pokemon)
 
 if __name__ == '__main__':
     app.run(debug=True)
