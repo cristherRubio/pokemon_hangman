@@ -5,6 +5,15 @@
 {% endblock %}
 
 {% block main %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
     <h1>Poké-Hangman</h1>
     <h3>Catch 'em all!</h3>
     <a href="/game">
