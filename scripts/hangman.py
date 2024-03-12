@@ -11,7 +11,6 @@ Basic hangman python logic
 
 WORDS = ['Hola', 'Pikachu', 'Bulbasur']
 
-sucess = False
 pokemon = random.choice(WORDS).upper()
 guessed_chars = []
 attempts = (len(pokemon) // 2) - 1 

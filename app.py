@@ -1,4 +1,5 @@
 import helpers
+import string
 import re
 import random
 from flask import Flask, render_template, request, redirect, url_for, session, flash, get_flashed_messages
@@ -87,12 +88,72 @@ def profile():
         flash('You need to log in first.', 'error')
         return redirect(url_for('login'))
 
-@app.route('/game')
+@app.route('/game', methods=['GET', 'POST'])
 def game():
-    all_pokemon = Pokemon.query.all()
-    rndm_pokemon = random.choice(all_pokemon)
-    print(rndm_pokemon.sprite_url)
-    return render_template('game.html', rndm_pokemon=rndm_pokemon)
+
+    if 'rndm_pokemon_id' not in session or request.method == 'GET':
+        reset_game()
+        all_pokemon = Pokemon.query.all()
+        rndm_pokemon = random.choice(all_pokemon)
+        session['rndm_pokemon_id'] = rndm_pokemon.id
+        session['letters'] = list(string.ascii_uppercase)
+        session['guessed_chars'] = []
+        session['attempts'] = (len(rndm_pokemon.name.upper()) // 2) - 1
+    else:
+        rndm_pokemon_id = session['rndm_pokemon_id']
+        rndm_pokemon = Pokemon.query.get(rndm_pokemon_id)
+
+    """ all_pokemon = Pokemon.query.all()
+    rndm_pokemon = random.choice(all_pokemon) """
+
+    # Hangman mechanic
+    pokemon_name = rndm_pokemon.name.upper()
+    guessed_chars = session.get('guessed_chars', [])
+    letters = session.get('letters', list(string.ascii_uppercase))
+    attempts = (len(pokemon_name) // 2) - 1
+    if attempts < 1:
+        attempts = 2
+
+    regex_sub = '_' * len(pokemon_name)  # Default value for regex_sub (ChatGPT)
+
+    if request.method == 'POST':
+        if attempts < 0:
+            reset_game()
+            return redirect(url_for('game'))
+            # Render template or pop up to play again
+
+        regex = r'[^ '+ "".join(guessed_chars) + r']'  # Dynamic regex list (ChatGPT)
+        regex_sub = re.sub(regex, '_', pokemon_name)
+        if regex_sub == pokemon_name:
+            # If user add to collection PokemonMaster
+            # Render template or pop up to play again
+            ...
+
+        letter = request.form.get('guess').upper()
+        if letter in pokemon_name:
+            guessed_chars.append(letter) 
+        else:
+            attempts -= 1
+
+        if letter in letters:
+            letters.remove(letter)
+
+    session['letters'] = letters
+    session['guessed_chars'] = guessed_chars
+
+    return render_template(
+        'game.html', 
+        rndm_pokemon=rndm_pokemon, 
+        masked_word=regex_sub, 
+        letters=letters,
+        attempts=attempts
+    )
+
+def reset_game():
+    session.pop('rndm_pokemon_id', None)
+    session.pop('letters', None)
+    session.pop('guessed_chars', None)
+    session.pop('attempts', None)
 
 if __name__ == '__main__':
     app.run(debug=True)
