@@ -5,6 +5,20 @@
 {% endblock %}
 
 {% block main %}
-    <h1>#TODO: GAME</h1>
-    <h2>{{ rnd_pokemon.name.title() }}</h2>
+    <h1>Play!</h1>
+    <h2>Guess the pokémon</h2>
+    <img src="{{ rndm_pokemon.sprite_url }}" width="300px" style="image-rendering: pixelated; filter: brightness(0.00)">
+    <h2>{{ rndm_pokemon.name.title() }}</h2>
+    <p>{{ rndm_pokemon.end_url.title() }}</p>
+
+    <div id="attempts"></div>
+    <div>
+        {% for letter in letters %}
+            <form action="/game" method="POST" style="display: inline;">
+                <input type="hidden" name="guess" value="{{ letter }}">
+                <button type="submit" class="btn btn-primary">{{ letter }}</button>
+            </form>
+        {% endfor %}
+    </div>
+
 {% endblock %}
